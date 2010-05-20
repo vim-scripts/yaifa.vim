@@ -1,0 +1,21 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=3096
+
+NOTE: This update makes the start-up way faster, sorry for the previous behaviour.
+
+This plug-in will automatically try to detect the kind of indentation in your file and set Vim's options to keep it that way. It recognizes three types of indentation:
+
+1.- Space: Only spaces are used to indent.
+
+2.- Tab: Only tabs are used.
+
+3.- Mixed: A combination of tabs and space is used. e.g.: a tab stands for 8 spaces, but each indentation level is 4 spaces.
+
+The values of 'expandtab' and 'shiftwidth' set in your vimrc will be used as the default values.
+
+Use :YAIFAMagic to manually detect and set the indenting settings for the current file, it'll also echo the found settings.
+
+You can set yaifa_max_lines to customize the max number of lines that will be scanned:
+
+    let yaifa_max_lines = 4096
+
+This script started as a port to VimL from Philippe Fremy's Python script Indent Finder (vimscript#513), hence the "Almost" part of the name.

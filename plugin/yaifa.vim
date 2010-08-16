@@ -1,5 +1,5 @@
 " YAIFA: Yet Another Indent Finder, Almost...
-" Version: 1.1
+" Version: 1.2
 " Modified: 2010-05-23
 " Author: Israel Chauca F. <israelchauca@gmail.com>
 "
@@ -15,23 +15,11 @@
 "
 " Use :YAIFAMagic to manually set the indenting settings for the current file.
 "
-" You can set three options to customize the default values when the file's
-" indentation can't be determined:
+" Depending on the system set-up and the file size scanning too many lines can
+" be painfully slow, so YAIFA processes 2048 lines by default, that value can
+" be changed with the following line in your .vimrc:
 "
-" - yaifa_max_lines       The max number of lines that will be scanned to
-"                         determine the file indentation.
-"
-"
-" - yaifa_tab_width       Default tab width to be used when the indentation
-"                         can't be determined.
-"
-"
-" - yaifa_indentation     Default kind of indentation, accepts the following
-"                         numeric values:
-"                         - 0: Space.
-"                         - 1: Tab.
-"                         - 2: Mixed.
-"
+"    let yaifa_max_lines = 4096
 "
 " This script is a port to VimL from Philippe Fremy's Python script Indent
 " Finder, hence the "Almost" part of the name.
@@ -47,23 +35,17 @@ let g:loaded_yaifa = 1
 if exists('g:yaifa_max_lines')
 	let s:max_lines = g:yaifa_max_lines
 else
-	let s:max_lines = 1024*16
+	let s:max_lines = 1024*2
 endif
 
-if exists('g:yaifa_indentation')
-	let s:default_indent = g:yaifa_indentation == 0 ? "tab" :
-				\ g:yaifa_indentation == 1 ? "space" :
-				\ g:yaifa_indentation == 2 ? "mixed" :
-				\ "space"
-else
+if &expandtab
 	let s:default_indent = 'space'
+	let s:default_tab_width = s:swset ? &sw : 2
+else
+	let s:default_indent = 'tab'
+	let s:default_tab_width = s:swset ? &sw : 4
 endif
 
-if exists('g:yaifa_tab_width')
-	let s:default_tab_width = g:yaifa_tab_width
-else
-	let s:default_tab_width = 4
-endif
 
 let s:verbose_quiet = 0
 let s:verbose_info  = 1
@@ -427,10 +409,10 @@ function! YAIFA(...)
 		call s:info('space')
 		"spaces:
 		" => set sts to the number of spaces
-		" => set tabstop to the number of spaces
+		" => set tabstop to 8
 		" => expand tabs to spaces
 		" => set shiftwidth to the number of spaces
-		let cmd = 'set sts=' . result[1] . ' | set tabstop=' . result[1] . ' | set expandtab | set shiftwidth=' . result[1]
+		let cmd = 'set sts=' . result[1] . ' | set tabstop=8 | set expandtab | set shiftwidth=' . result[1]
 	elseif result[0] == 'tab'
 		call s:info('tab')
 		"tab:
@@ -441,21 +423,22 @@ function! YAIFA(...)
 		let cmd = 'set sts=0 | set tabstop=' . s:default_tab_width . ' | set noexpandtab | set shiftwidth=' . s:default_tab_width
 	elseif result[0] == 'mixed'
 		call s:info('mixed')
-		 "tab:
-		 " => set sts to 0
-		 " => set tabstop to tab_indent
-		 " => set expandtab to false
-		 " => set shiftwidth to space_indent
+		"tab:
+		" => set sts to 0
+		" => set tabstop to tab_indent
+		" => set expandtab to false
+		" => set shiftwidth to space_indent
 		let s:ts = result[1][0]
 		let s:sw = result[1][1]
 		"echom "s:sw: " . s:sw
-		if s:sw == "" && (s:ts - (2*(s:ts/2))) == 0 " l mod 2
+		"if s:sw == "" && (s:ts - (2*(s:ts/2))) == 0 " l mod 2
+		if s:sw == "" && s:ts > 2
 			let s:sw = s:ts/2
 		elseif s:sw == ""
 			let s:sw = s:ts
 		endif
 
-		let cmd = 'set sts=4 | set tabstop=' . s:ts . ' | set noexpandtab | set shiftwidth=' . s:sw
+		let cmd = 'set sts=' . s:sw . ' | set tabstop=' . s:ts . ' | set noexpandtab | set shiftwidth=' . s:sw
 	endif
 	execute cmd
 	let b:yaifa_set = 1
@@ -483,4 +466,4 @@ augroup YAIFA
 	au BufRead * call YAIFA(1)
 augroup End
 
-command YAIFAMagic call YAIFA()
+command -nargs=0 -bar YAIFAMagic call YAIFA()
